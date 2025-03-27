@@ -1,0 +1,50 @@
+trigger:
+  branches:
+    include:
+      - main
+
+variables:
+  azureSubscription: 'YourAzureSubscriptionName'
+  resourceGroupName: 'your-resource-group-name'
+  location: 'East US'
+  environment: 'dev'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: TerraformInit
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - task: TerraformInstaller@0
+            inputs:
+              terraformVersion: 'latest'
+          
+          - script: |
+              terraform init
+            displayName: 'Terraform Init'
+
+  - stage: Test
+    jobs:
+      - job: TerraformValidate
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              terraform validate
+            displayName: 'Terraform Validate'
+
+  - stage: Deploy
+    jobs:
+      - job: TerraformApply
+        pool:
+          vmImage: 'ubuntu-latest'
+        steps:
+          - script: |
+              terraform apply -auto-approve
+            displayName: 'Terraform Apply'
+            env:
+              ARM_CLIENT_ID: $(ARM_CLIENT_ID)
+              ARM_CLIENT_SECRET: $(ARM_CLIENT_SECRET)
+              ARM_SUBSCRIPTION_ID: $(ARM_SUBSCRIPTION_ID)
+              ARM_TENANT_ID: $(ARM_TENANT_ID)
